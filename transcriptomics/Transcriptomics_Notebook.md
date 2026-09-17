@@ -38,7 +38,7 @@
 
 **Code:**
 
-``` R
+``` r
 print("Hello world")
 ```
 
@@ -64,6 +64,14 @@ oh cool graph, yay! And some interpretation of what you are seeing, maybe what t
 
 ## 9/17/2026 - Introduce the study system
 
+-   Understand the experimental design and data and questions that can be addressed with these data.
+
+-   Understand what a .fastq file is.
+
+-   Understand the work flow or “pipeline” for processing and analyzing RNAseq data.
+
+-   Conceptualize a “counts” file.
+
 **Working Directory**
 
 `/gpfs1/home/a/s/asmit168/eco_genomics_2026/transcriptomics`
@@ -88,5 +96,21 @@ oh cool graph, yay! And some interpretation of what you are seeing, maybe what t
 
 **Code:**
 
-``` R
+``` r
+# Useful commands for later in shell access of VACC
+
+# to get to class directory
+cd /gpfs1/cl/biol3990
+
+# to get list of what is in directory (ls short, ll long)
+ls
+ll
+
+# take the output of zcat (reads a gzipped file; AA...qz file) and give me (|) this number of lines (-n 8) - output is the first few lines of the quality of the reads
+zcat AA_F0_Rep3_2_clean.fq.gz | head -n 8
+
+#DO NOT run the above file without adding | (pipe) aka filtering it thru a secondary command.... or else computer may explode
+
+# tell me how many lines are in this file
+zcat AA_F0_Rep3_2_clean.fq.gz | wc -l
 ```
