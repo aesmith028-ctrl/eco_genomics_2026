@@ -3,6 +3,7 @@
 
 ## Set your working directory
 setwd("~/eco_genomics_2026/transcriptomics")
+# This is the path to my home directory on the VACC
 
 ## Import the libraries that we're likely to need in this session
 
@@ -18,7 +19,7 @@ library("vsn")
 
 ####################################################
 
-### Import our data
+### Import our data ####
 
 ####################################################
 
@@ -38,7 +39,7 @@ head(conds)
 
 ####################################################
 
-### Explore data distributions
+### Explore data distributions ####
 
 ####################################################
 
@@ -65,7 +66,7 @@ hist(apply(countsTableRound,1,mean),xlim=c(0,1000), ylim=c(0,60000),breaks=10000
 
 ####################################################
 
-### Start working with DESeq2!
+### Start working with DESeq2! ####
 
 ####################################################
 
@@ -271,3 +272,6 @@ ggarrange(F0, F2, F4, F11, nrow = 2, ncol=2)
 dev.off()
 
 # this png file now is in myresults
+
+
+# Run another model to focus within generation F0 between treatments ####

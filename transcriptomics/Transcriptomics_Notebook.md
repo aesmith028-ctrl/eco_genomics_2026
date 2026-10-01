@@ -36,10 +36,24 @@
 
 `none`
 
-**Code:**
+**Code:** essentials/shortcuts to know
 
 ``` r
-print("Hello world")
+# pwd for my home directory
+/gpfs1/home/a/s/asmit168/eco_genomics_2026
+
+# BASH commands and what they mean
+print working directory (pwd) #= where am I? Will show you whole path
+Zcat #= will open/print whole file (DO NOT DO); pipe (|) to head = just top of file
+Cd #= change directory (.. moves you back a directory, . means from where you currently are)
+ Ll #= list long (gives more info about each file than ls)
+Ls #= list (what is here?)
+History #= prints everything you have typed recently in the session (prints all past commands)
+Arrow key up #= gives you past commands; keep arrowing to keep going further back
+Tab button #= fill in the rest of the input based on what files are there in the directory (saves you from typos)
+Cp #= copy something
+Rm #= remove something (be careful!)
+~ # = home directory shortcut
 ```
 
 **Table:**
@@ -147,9 +161,11 @@ zcat AA_F0_Rep3_2_clean.fq.gz | wc -l
 
 -   `R-Studio`
 
+-   module commands: `load ecogen-rlibs`
+
 **Scripts:**
 
-`created ahud_DESeq2_inclass.R inside of myscripts`
+`created ahud_DESew2_inclass.R in my scripts`
 
 **Code:**
 
@@ -181,16 +197,6 @@ setwd("~/projects/eco_genomics_2026/Transcriptomics")
 
 ## Import the libraries that we're likely to need in this session
 
-library(DESeq2)
-library(dplyr)
-library(tidyr)
-library(ggplot2)
-library(scales)
-library(ggpubr)
-library(vsn)  
-library("pheatmap")
-library("vsn")
-
 ####################################################
 
 ### Import our data
@@ -199,16 +205,10 @@ library("vsn")
 
  
 # Import the counts matrix
-countsTable <- read.table("mydata/salmon.isoform.counts.matrix.filteredAssembly", header=TRUE, row.names=1)
-head(countsTable)
-dim(countsTable)
 
 countsTableRound <- round(countsTable) # bc DESeq2 doesn't like decimals (and Salmon outputs data with decimals)
-head(countsTableRound)
 
 #import the sample description table
-conds <- read.delim("ahud_samples_R.txt", header=TRUE, stringsAsFactors = TRUE, row.names=1)
-head(conds)
 
 # WHAT ABOVE CODE DOES: loaded libraries, imported the counts matrix, round off decimals from counts table, open conditions table
 
@@ -221,18 +221,10 @@ head(conds)
 ####################################################
 
 # Let's see how many reads we have from each sample
-colSums(countsTableRound)
-mean(colSums(countsTableRound))
 
 # generate a plot of total number of read counts we have for each sample, fairly even for all
 
-barplot(colSums(countsTableRound), names.arg=colnames(countsTableRound),cex.names=0.5, las=3,ylim=c(0,21000000))
-abline(h=mean(colSums(countsTableRound)), col="blue", lwd=2)
-
 # the average number of counts per gene
-rowSums(countsTableRound)
-mean(rowSums(countsTableRound)) # [1] 8217.81
-median(rowSums(countsTableRound)) # [1] 377
 
 apply(countsTableRound,2,mean) # 2 in the apply function does the action across columns
 apply(countsTableRound,1,mean) # 1 in the apply function does the action across rows
@@ -242,18 +234,13 @@ hist(apply(countsTableRound,1,mean),xlim=c(0,1000), ylim=c(0,60000),breaks=10000
 -----------------------------------------------------------------------------------
   # Define our model and create a DESeq2 object
 
-####################################################
+#################################################### 
 
 ### Start working with DESeq2!
 
 ####################################################
 
 #### Create a DESeq object and define the experimental design here with the tilda
-
-dds <- DESeqDataSetFromMatrix(countData = countsTableRound, colData=conds, 
-                              design= ~ generation + treatment)
-
-dim(dds)
 
 # Filter out genes with too few reads - remove all genes with counts < 15 in more than 75% of samples, so ~28)
 ## suggested by WGCNA on RNAseq FAQ
@@ -451,3 +438,168 @@ dev.off()
 **Final PCA From Today**
 
 ![](myresults/PCA_allGens.png)
+
+------------------------------------------------------------------------
+
+## 9/24/2026 - Basic R commands
+
+-   learned what basic commands in R do
+
+-   Learn more R syntax
+
+**Working Directory**
+
+`/gpfs1/home/a/s/asmit168/eco_genomics_2026/transcriptomics`
+
+**Input Files**
+
+`none`
+
+**Output Files**
+
+`/gpfs1/home/a/s/asmit168/eco_genomics_2026/transcriptomics/Transcriptomics_Notebook.md`
+
+**Programs and dependencies:**
+
+-   `R version 4.5.1 (tidyverse)`
+
+-   `R-Studio`
+
+-   module commands: `load ecogen-rlibs`
+
+**Scripts:**
+
+**Code:**
+
+``` r
+
+x <- 5
+students <- data.frame(
+  name = c("A", "B", "C"),
+  height = c(62, 68, 72)
+)
+
+
+head(students)
+class(students)
+str(students)
+# in this list (names), give me the first thing
+students$name[1]
+# give me the first row, second column
+students[1,2]
+```
+
+------------------------------------------------------------------------
+
+## 9/29/2026 - Differential gene expression analysis
+
+-   Analyze and visualize the counts matrix using a simplied data set (just generation F0).
+
+-   Understand what a contrast is. What is up- versus down-regulation?
+
+-   Learn how to make the various common types of differential gene expression visualizations.
+
+**Working Directory**
+
+`/gpfs1/home/a/s/asmit168/eco_genomics_2026/transcriptomics/mydata`
+
+**Input Files**
+
+`none`
+
+**Output Files**
+
+`/gpfs1/home/a/s/asmit168/eco_genomics_2026/transcriptomics/Transcriptomics_Notebook.md`
+
+**Programs and dependencies:**
+
+-   `R version 4.5.1 (tidyverse)`
+
+-   `R-Studio`
+
+-   module commands: `load ecogen-rlibs`
+
+**Scripts:**
+
+`created 9.29.26_AHUD_DESEQpt2.R in my scripts`
+
+**Code:**
+
+``` r
+#### explanations of coding in 9.29.26_AHUD_DESEQpt2 script ####
+
+# set directory to mydata
+setwd("/gpfs1/home/a/s/asmit168/eco_genomics_2026/transcriptomics/mydata")
+
+####################################################
+
+### Import our data
+
+####################################################
+
+# import counts matrix, round to a whole number, and import the sample treatments table (includes metadata (conds))
+
+# generate dds = pared down version of countstable for only good quality data
+
+# focus on only F0 generation for first PCA
+
+# generate dds_F0 for filtered data just for individuals in F0, allowing us to only highlight impact of treatment without impact of generation complicating things
+
+####################################################
+
+### Check on the DE results from the DESeq 
+
+####################################################
+
+# the three comparisons of treatments: "treatment_OA_vs_AM"  "treatment_OW_vs_AM"  "treatment_OWA_vs_AM"
+
+# Looking at the results of comparing OWA vs AM, ordering by the most significant values first, overall isolating those specific results on their own
+
+# do above 2x more times for other two treatments
+
+# # OA has a much weaker impact of differential expression compared to OW
+
+### plot individual genes ###
+
+# padj = adjusted p value, used to select genes with most significant p value
+
+# we pulled out one gene that is likely highly differentially expressed across all treatments to see how the count differs across all treatments. The count is lowest for AM (duh), fairly low for OA, and about the same for OW and OWA (makes sense, the OW is carrying in OWA)
+
+# making an MA plot; ambient is the 0 line, dots show how different each genes are from ambient, majority positive upregulation rather than downregulation when responding to ocean warming
+
+# making a volcano plot; a lot more upregulation compared to downregulation, but this plot factors in p value/significance, colors are significant and grey is not
+
+# make a heatmap of the to differentially expressed genes; OW has a lot more upregulation, similar but a bit less for OWA, and more downregulation for AM; organized by genes that are being similarly expressed (tree format)
+
+#### PLOT OVERLAPPING DEGS IN VENN EULER DIAGRAM ####
+# venn diagram but scaled to size of values of each compartment
+
+# ! = not keep ... anything without an adjusted p value
+# grab degs in each individual treatment comparison
+# OW has most DEGS compared to other two treatments (broad pattern os continuing)
+# manually calculating values for each section of the venn diagram
+# OA is tiny, lots of genes overlapping between OWA and OW, as well as a lot in OW alone
+
+# make an upset plot; order DEGS by frequency in which they appear, shows same info from euler plot in a diff context, bars show number of degs, sorted by combinations of treatments (each bar is a section of the euler plot), organized by most - least. 
+```
+
+**Plots**: \
+MA plot
+
+![](myresults/MA.png)
+
+volcano plot
+
+![](myresults/volcano.png)
+
+Heatmap
+
+![](myresults/heatmap.png)
+
+Euler Plot
+
+![](myresults/Upset.png)
+
+Upset Plot
+
+![](myresults/euler.png)
