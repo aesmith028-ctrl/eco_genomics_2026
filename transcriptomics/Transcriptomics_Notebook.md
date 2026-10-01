@@ -583,7 +583,7 @@ setwd("/gpfs1/home/a/s/asmit168/eco_genomics_2026/transcriptomics/mydata")
 # make an upset plot; order DEGS by frequency in which they appear, shows same info from euler plot in a diff context, bars show number of degs, sorted by combinations of treatments (each bar is a section of the euler plot), organized by most - least. 
 ```
 
-**Plots**: \
+**Plots**:\
 MA plot
 
 ![](myresults/MA.png)
@@ -603,3 +603,100 @@ Euler Plot
 Upset Plot
 
 ![](myresults/euler.png)
+
+------------------------------------------------------------------------
+
+## 10/01/2026 - DGEA wrap up, GO and maybe WGCNA analyses
+
+-   Build on the analyses started in the last tutorial focused on generation F0.
+
+-   Understand how a scatter plot can be used to compare expression responses to OW relative to OWA (each vs. AM control)
+
+-   Understand how gene ontology (GO) functional enrichment analysis works;
+
+-   perform GO analyses using TopGO Understand Weighted Gene Correlation Network Analysis ((WGCNA));
+
+-   perform WGCNA analyses
+
+**Working Directory**
+
+`/gpfs1/home/a/s/asmit168/eco_genomics_2026/transcriptomics/mydata`
+
+**Input Files**
+
+`none`
+
+**Output Files**
+
+`/gpfs1/home/a/s/asmit168/eco_genomics_2026/transcriptomics/Transcriptomics_Notebook.md`
+
+**Programs and dependencies:**
+
+-   `R version 4.5.1 (tidyverse)`
+
+-   `R-Studio`
+
+-   module commands: `load ecogen-rlibs`
+
+**Scripts:**
+
+`continuing in``9.29.26_AHUD_DESEQpt2.R in my scripts`
+
+**Code:**
+
+``` r
+### In the script "9.29.26_AHUD_DESEQpt2.R" in myscripts ###
+
+# First, setwd and load in all the libraries, as well as import the data, filter the data, run the DESeq model, and define your results dataframes before proceeding below… basically run all of the code before the first plot, as those past plots do not need to be regenerated
+
+#################################################################
+
+#### Scatter plot to assess how correlated are responses to OWA vs OW?
+
+#################################################################
+
+# pulling out log fold change and adjusted p values from results of OWAvsAM and OWvsAM, 
+
+#then merge these two "plot" dataframes we just created into one, merged it by gene
+
+# We then want to filter this, as we do not want datapoints that do not have a LFC as this would mess with the plot
+
+# classify significance = tells you a sequence of events to do, mutate function will create a new variable in the dataframe (new column = SigGroup), so we create "SigGroup" by case when (if/else), 
+
+# calculate correlation between LFC of OWA and OW using the correlation function so we can later plot it
+
+# for plotting purposes, we want to sort by significance, we want neither on bottom as it is least significant, and maybe put both on top, define then arrange
+
+# use ggplot to generate the plot, aes = aesthetics (pretty plot), define variables to axis and how to color them, point plot, alpha is transparency, then point sizes, annotate function displays text (r value/correlation) and tell it where to display on the plot (code line 342), label axes, set text size, etc. 
+
+# ggplot plots each point on scatterplot in layers, and it plots everything in order, so you want to put what is most important to see in the front, so list it first, or else neither (gray) dots will fill your plot, making it useless. (code on line 316... levels)
+
+# can make a scatterplot to compare any two treatments!
+
+# This sequence of actions is actually a great demonstration of a typical genomics workflow:
+
+# Filter the data.
+# Annotate/Classify the genes.
+# Order the results.
+# Visualize with ggplot.
+```
+
+**Plots:**
+
+scatter plot
+
+![](myresults/scatter.png)
+
+Interpretation:
+
+-   both follows 1:1 line well, because they have similar LFC for both up and down regulated in both treatments (duh, its both)
+
+-   pinwheel/symmetrical coloration = due to the way we are comparing treatments on axes
+
+-   red = follows vertical axis which is its own treatment
+
+-   green = follows horizontal axis which is its own treatment
+
+-   overall, data is aligning how we would expect for what is significant in a given treatment
+
+-   some grey points have a lot of variation among replicates, making them not significant even if they have differential LFC in each treatment.
