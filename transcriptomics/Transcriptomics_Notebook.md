@@ -266,158 +266,27 @@ resultsNames(dds)
 
 # The goal of transformation "is to remove the dependence of the variance on the mean, particularly the high variance of the logarithm of count data when the mean is low."
 
-# this gives log2(n + 1)
-ntd <- normTransform(dds)
-meanSdPlot(assay(ntd))
 
-# Variance stabilizing transformation
-vsd <- vst(dds, blind=FALSE)
-meanSdPlot(assay(vsd))
-## ABOVE is a standard plot to visualize variance, overall more variation in lower expressed genes
 
 ### Look for outliers in sample ###
 
-sampleDists <- dist(t(assay(vsd)))
-
-library("RColorBrewer")
-sampleDistMatrix <- as.matrix(sampleDists)
-rownames(sampleDistMatrix) <- paste(vsd$line, vsd$generation, sep="-")
-colnames(sampleDistMatrix) <- NULL
-colors <- colorRampPalette( rev(brewer.pal(9, "Blues")) )(255)
-pheatmap(sampleDistMatrix,
-         clustering_distance_rows=sampleDists,
-         clustering_distance_cols=sampleDists,
-         col=colors)
 
 # Note any outliers: maybe one from AH (OA) F2... AH_F2_Rep2
 # This plot should help us see outlier better
-sampleTree <- hclust(dist(sampleDists), method="average")
-# plot
-plot(sampleTree, main="Sample clustering to detect outliers", sub="", xlab="",cex.lab=1.5, cex.axis=1.5, cex.main=2)
+
 # we will leave the outlier for now, but good to note
 
 ### PCA to visualize global gene expression patterns ###
 
 # first transform the data for plotting using variance stabilization
-vsd <- vst(dds, blind=FALSE)
-
-pcaData <- plotPCA(vsd, intgroup=c("treatment","generation"), returnData=TRUE)
-percentVar <- round(100 * attr(pcaData,"percentVar"))
 
 # visualize all data from all 4 treatment groups and generations in one plot
-ggplot(pcaData, aes(PC1, PC2, color=treatment, shape=generation)) +
-  geom_point(size=3) +
-  xlab(paste0("PC1: ",percentVar[1],"% variance")) +
-  ylab(paste0("PC2: ",percentVar[2],"% variance")) + 
-  coord_fixed()
 
 ## From here we can play around with colors and shapes to optomize the data visualization.
 
 ###############################################################
 
 # Let's plot the PCA by generation in four panels
-
-data <- plotPCA(vsd, intgroup=c("treatment","generation"), returnData=TRUE)
-percentVar <- round(100 * attr(data,"percentVar"))
-
-###########  
-# Just looking at F0 generation
-dataF0 <- subset(data, generation == 'F0')
-
-F0 <- ggplot(dataF0, aes(PC1, PC2)) +
-  geom_point(size=10, stroke = 1.5, aes(fill=treatment, shape=treatment)) +
-  xlab(paste0("PC1: ",percentVar[1],"% variance")) +
-  ylab(paste0("PC2: ",percentVar[2],"% variance")) +
-  ylim(-10, 25) + xlim(-40, 10)+ # zoom for F0 with new assembly
-  scale_shape_manual(values=c(21,22,23,24), labels = c("Ambient", "Acidification","Warming", "OWA"))+
-  scale_fill_manual(values=c('#6699CC',"#F2AD00","#00A08A", "#CC3333"), labels = c("Ambient", "Acidification","Warming", "OWA"))+
-  theme_bw() +
-  theme(legend.position = "none") +
-  theme(panel.border = element_rect(color = "black", fill = NA, size = 4))+
-  theme(text = element_text(size = 20)) +
-  theme(legend.title = element_blank())
-
-# just looking at F0 generation, strong clustering by treatment groups
-F0
-# Above graph portrays developmental plasticity, how do they respond to environment
-
-################# F2
-
-dataF2 <- subset(data, generation == 'F2')
-
-F2 <- ggplot(dataF2, aes(PC1, PC2)) +
-  geom_point(size=10, stroke = 1.5, aes(fill=treatment, shape=treatment)) +
-  xlab(paste0("PC1: ",percentVar[1],"% variance")) +
-  ylab(paste0("PC2: ",percentVar[2],"% variance")) +
-  ylim(-40, 25) + xlim(-50, 55)+
-  scale_shape_manual(values=c(21,22,23), labels = c("Ambient", "Acidification","Warming"))+
-  scale_fill_manual(values=c('#6699CC',"#F2AD00","#00A08A"), labels = c("Ambient", "Acidification","Warming"))+
-  theme(legend.position = c(0.83,0.85), legend.background = element_blank(), legend.box.background = element_rect(colour = "black")) +
-  guides(shape = guide_legend(override.aes = list(shape = c( 21,22, 23))))+
-  guides(fill = guide_legend(override.aes = list(shape = c( 21,22, 23))))+
-  guides(shape = guide_legend(override.aes = list(size = 5)))+
-  theme_bw() +
-  theme(legend.position = "none") +
-  theme(panel.border = element_rect(color = "black", fill = NA, size = 4))+
-  theme(text = element_text(size = 20)) +
-  theme(legend.title = element_blank())
-
-# just looking at F2 generation, some more separation of the warming (diamond)
-F2
-
-# Yes - F2 is missing one ambient replicate
-
-################################ F4
-
-dataF4 <- subset(data, generation == 'F4')
-
-F4 <- ggplot(dataF4, aes(PC1, PC2)) +
-  geom_point(size=10, stroke = 1.5, aes(fill=treatment, shape=treatment)) +
-  xlab(paste0("PC1: ",percentVar[1],"% variance")) +
-  ylab(paste0("PC2: ",percentVar[2],"% variance")) +
-  ylim(-40, 25) + xlim(-50, 55)+ # limits with filtered assembly
-  scale_shape_manual(values=c(21,22,23,24), labels = c("Ambient", "Acidification","Warming", "OWA"))+
-  scale_fill_manual(values=c('#6699CC',"#F2AD00","#00A08A", "#CC3333"), labels = c("Ambient", "Acidification","Warming", "OWA"))+
-  guides(shape = guide_legend(override.aes = list(shape = c( 21,22, 23, 24))))+
-  guides(fill = guide_legend(override.aes = list(shape = c( 21,22, 23, 24))))+
-  guides(shape = guide_legend(override.aes = list(size = 5)))+
-  theme_bw() +
-  theme(legend.position = "none") +
-  theme(panel.border = element_rect(color = "black", fill = NA, size = 4))+
-  theme(text = element_text(size = 20)) +
-  theme(legend.title = element_blank())
-# Just looking at F4 generation, largely overlapping, synchronized/homeostasis reached
-F4
-
-
-################# F11
-
-dataF11 <- subset(data, generation == 'F11')
-
-F11 <- ggplot(dataF11, aes(PC1, PC2)) +
-  geom_point(size=10, stroke = 1.5, aes(fill=treatment, shape=treatment)) +
-  xlab(paste0("PC1: ",percentVar[1],"% variance")) +
-  ylab(paste0("PC2: ",percentVar[2],"% variance")) +
-  ylim(-45, 25) + xlim(-50, 55)+
-  scale_shape_manual(values=c(21,24), labels = c("Ambient", "OWA"))+
-  scale_fill_manual(values=c('#6699CC', "#CC3333"), labels = c("Ambient", "OWA"))+
-  guides(shape = guide_legend(override.aes = list(shape = c( 21, 24))))+
-  guides(fill = guide_legend(override.aes = list(shape = c( 21, 24))))+
-  guides(shape = guide_legend(override.aes = list(size = 5)))+
-  theme_bw() +
-  theme(legend.position = "none") +
-  theme(panel.border = element_rect(color = "black", fill = NA, size = 4))+
-  theme(text = element_text(size = 20)) +
-  theme(legend.title = element_blank())
-# At just F11, clusters separate by treatment group again
-F11
-
-
-# png("PCA_F11.png", res=300, height=5, width=5, units="in")
-# 
-# ggarrange(F11, nrow = 1, ncol=1)
-# 
-# dev.off()
 
 # put it all together into one plot to look at all 4 plots together
 ggarrange(F0, F2, F4, F11, nrow = 2, ncol=2)
@@ -426,11 +295,6 @@ ggarrange(F0, F2, F4, F11, nrow = 2, ncol=2)
 ## some evolution may have happened across generations, due to shift in treatment cluster locations
 
 # save the graph we just generated as a png file
-png("./myresults/PCA_allGens.png", res=300, height=5, width=5, units="in")
-
-ggarrange(F0, F2, F4, F11, nrow = 2, ncol=2)
-
-dev.off()
 
 # this png file now is in myresults... displayed below!
 ```
@@ -610,13 +474,7 @@ Upset Plot
 
 -   Build on the analyses started in the last tutorial focused on generation F0.
 
--   Understand how a scatter plot can be used to compare expression responses to OW relative to OWA (each vs. AM control)
-
--   Understand how gene ontology (GO) functional enrichment analysis works;
-
--   perform GO analyses using TopGO Understand Weighted Gene Correlation Network Analysis ((WGCNA));
-
--   perform WGCNA analyses
+-   Understand how a scatter plot can be used to compare expression responses to OW relative to OWA (each vs. AM control
 
 **Working Directory**
 
@@ -640,7 +498,7 @@ Upset Plot
 
 **Scripts:**
 
-`continuing in``9.29.26_AHUD_DESEQpt2.R in my scripts`
+``` continuing in``9.29.26_AHUD_DESEQpt2.R in my scripts ```
 
 **Code:**
 
@@ -700,3 +558,106 @@ Interpretation:
 -   overall, data is aligning how we would expect for what is significant in a given treatment
 
 -   some grey points have a lot of variation among replicates, making them not significant even if they have differential LFC in each treatment.
+
+------------------------------------------------------------------------
+
+## 10/06/2026 - GO and maybe WGCNA analyses
+
+-   Understand how gene ontology (GO) functional enrichment analysis works;
+
+-   perform GO analyses using TopGO Perform and understand Weighted Gene Correlation Network Analysis ((WGCNA))
+
+**Working Directory**
+
+`/gpfs1/home/a/s/asmit168/eco_genomics_2026/transcriptomics/mydata`
+
+**Input Files**
+
+`none`
+
+**Output Files**
+
+`/gpfs1/home/a/s/asmit168/eco_genomics_2026/transcriptomics/Transcriptomics_Notebook.md`
+
+**Programs and dependencies:**
+
+-   `R version 4.5.1 (tidyverse)`
+
+-   `R-Studio`
+
+-   module commands: `load ecogen-rlibs`
+
+**Scripts:**
+
+`Day6_TopGO_WGCNA.R in my scripts`
+
+`WGCNA_10.06.26.R in my scripts`
+
+**Code:**
+
+``` r
+#### GO and TopGo Notes ####
+
+# Gene Ontology (GO): map genes to functions
+# Some genes can have multiple GO functions cause the gene has multiple jobs
+# Can have functions within a hierarchy (ex: biological process → cellular → response → CM)
+# TopGO - tells us about the enrichment of certain processes. Tells us each GO term and how many genes map to that term; number of DEGS that map to this term, number expected by chance that map here (do this to count for error, should be distinctly different from DEG number), p-value (to show significance of term in the genome/DEGS)
+# Sort above by significance/enrichment value
+# Can infer meaning behind genes: what genetic functions are different among treatments?
+# Can do all that without knowing the name of the gene we are working with
+# Potential pitfall: we do not know the genes we are using, and we are mapping them onto other organisms… could be the wrong aligned gene! Gene could have a diff. function in your specific organism. 
+
+#### WGCNA Notes ####
+
+# WGCNA: Weighted Gene Co-Expression Network Analysis
+# Network of all the genes with weighted correlations; shows connections/correlations between/among specific genes via line thickness
+# HUB genes = connecting genes that are driving/central and connect correlations among many genes
+
+### TopGO Code in Day6_TopGO_WGCNA.R script ###
+
+# copy down first two code chunks from day 4 (loading libraries and creating all tables needed)
+
+# The first step is to create the saved results files with the abbreviated trinity ids, for OWAvsAM, OWvsAM, and OAvsAM
+
+# navigate to /gpfs1/cl/biol3990/Transcriptomics/GOenrichment directory to get two files: transcript_universe.csv and trinotate_annotation_GOblastx_forTopGO.txt by cp (file) (mydata directorypath) IN TERMINAL
+
+# Prep to run the TopGo analysis
+       # Genes in GO mapping: 86453
+# Filter GO terms by size
+      # We do not want the little ones, too highly specialized to confidently understand, categories are too large, sequencing order, etc. Do not want too specific or too broad of terms
+      # filtered list = 71320 
+# Create a Function to Run a TopGo contrast
+
+# Run our TopGO function for the three different contrasts
+      # Takes a long ass time
+# head(GO_OW)
+      # noticed something weird... we get a GO term called "flight," but copopods swim... most genes are from drosophola = reference database = align to some analogous gene in drosophola to our copopod which is not very accurate or correct
+
+# Make a bubble plot of the top 10 GO categories for OW, OWA, and OA vs AM
+
+#### WGCNA ####
+
+# cp 2 files from /gpfs1/cl/biol3990/Transcriptomics/WGCNA to mydata
+
+# did not do much today as the code required a lot more memory than we had and the R script kept crashing, Andrew did an overview of what ours would have looked like on the screen 
+```
+
+**Plots:**
+
+Bubble Plot OWA vs AM
+
+![](myresults/bubble.png)
+
+-   significant genes is not taking into account how many genes are in that category, so it could be misleading, so want to weight it as a proportion to make significance more meaningful by number of significant genes
+
+Bubble Plot with Change
+
+![](myresults/bubble2.png)
+
+Bubble Plot OW vs AM
+
+![](myresults/BubbleOW.png)
+
+Bubble Plot OA vs AM
+
+![](myresults/BubbleOA.png)
