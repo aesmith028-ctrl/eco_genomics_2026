@@ -417,7 +417,7 @@ setwd("/gpfs1/home/a/s/asmit168/eco_genomics_2026/transcriptomics/mydata")
 
 # the three comparisons of treatments: "treatment_OA_vs_AM"  "treatment_OW_vs_AM"  "treatment_OWA_vs_AM"
 
-# Looking at the results of comparing OWA vs AM, ordering by the most significant values first, overall isolating those specific results on their own
+# Looking at the results of comparing OWA vs AM, ordering by the most significant values first, overall isolating those specific results on their own# 
 
 # do above 2x more times for other two treatments
 

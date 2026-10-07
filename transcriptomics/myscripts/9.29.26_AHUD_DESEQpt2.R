@@ -155,7 +155,7 @@ pheatmap(mat, annotation_col=df, cluster_cols = F, show_rownames = F)
 
 #################################################################
 
-# For OW vs AM
+# For OW vs AM F0 vs F4
 res_OWvsAM <- results(dds_F0, name="treatment_OW_vs_AM", alpha=0.05) # pull out the results for the contrast of interest
 res_OWvsAM <- res_OWvsAM[order(res_OWvsAM$padj),] # order them by significance
 res_OWvsAM <- res_OWvsAM[!is.na(res_OWvsAM$padj),] # get rid of any NAs
