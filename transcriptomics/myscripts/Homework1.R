@@ -321,105 +321,652 @@ ggarrange(
 ggarrange(F0, F4, nrow = 1, ncol = 2, legend = "right", common.legend = TRUE)
 #################################################################
 
-#### Scatter plot to assess whether OWA (combined) is synergistic, additive, or antagonistic relative to OA and OW ####
+#### GO analysis Plots ####
 
 #################################################################
 
+## F0 -------------------------------------------------------------------------------
 
-# Create merged data frame - need to use rownames because differences in filtering
-plot_OWA <- data.frame(
-  gene = rownames(res_OWAvsAM),
-  LFC_OWA = res_OWAvsAM$log2FoldChange,
-  padj_OWA = res_OWAvsAM$padj
+#### The first step is to create the saved results files with the abbreviated trinity ids ####
+# OWA vs AM
+res_OWAvsAM.df <- as.data.frame(res_OWAvsAM_F0)
+res_OWAvsAM.df$fullID <- rownames(res_OWAvsAM.df)
+
+parts <- strsplit(res_OWAvsAM.df$fullID, "::")
+
+res_OWAvsAM.df$shortID <- sapply(
+  parts,
+  function(x) paste(x[1:2], collapse="::")
 )
 
-plot_OW <- data.frame(
-  gene = rownames(res_OWvsAM),
-  LFC_OW = res_OWvsAM$log2FoldChange,
-  padj_OW = res_OWvsAM$padj
+write.csv(
+  res_OWAvsAM.df,
+  "/gpfs1/home/a/s/asmit168/eco_genomics_2026/transcriptomics/myresults/F0_OWAvsAM_results.csv",
+  row.names = FALSE
+)
+# OW vs AM
+res_OWvsAM.df <- as.data.frame(res_OWvsAM_F0)
+res_OWvsAM.df$fullID <- rownames(res_OWvsAM.df)
+
+parts <- strsplit(res_OWvsAM.df$fullID, "::")
+
+res_OWvsAM.df$shortID <- sapply(
+  parts,
+  function(x) paste(x[1:2], collapse="::")
 )
 
-plot_df <- merge(plot_OWA,
-                 plot_OW,
-                 by = "gene")
+write.csv(
+  res_OWvsAM.df,
+  "/gpfs1/home/a/s/asmit168/eco_genomics_2026/transcriptomics/myresults/F0_OWvsAM_results.csv",
+  row.names = FALSE
+)
+# OA vs AM
+res_OAvsAM.df <- as.data.frame(res_OAvsAM_F0)
+res_OAvsAM.df$fullID <- rownames(res_OAvsAM.df)
 
-# Remove genes with missing LFC values
-plot_df <- plot_df %>%
-  filter(!is.na(LFC_OWA),
-         !is.na(LFC_OW))
+parts <- strsplit(res_OAvsAM.df$fullID, "::")
 
-# Classify significance
-plot_df <- plot_df %>%
-  mutate(
-    SigGroup = case_when(
-      padj_OWA < 0.05 & padj_OW < 0.05 ~ "Both",
-      padj_OWA < 0.05 ~ "OWA only",
-      padj_OW < 0.05 ~ "OW only",
-      TRUE ~ "Neither"
+res_OAvsAM.df$shortID <- sapply(
+  parts,
+  function(x) paste(x[1:2], collapse="::")
+)
+
+write.csv(
+  res_OAvsAM.df,
+  "/gpfs1/home/a/s/asmit168/eco_genomics_2026/transcriptomics/myresults/F0_OAvsAM_results.csv",
+  row.names = FALSE
+)
+
+# Prep to run the TopGo analysis
+library(topGO)
+
+mappingFile <- "/gpfs1/home/a/s/asmit168/eco_genomics_2026/transcriptomics/mydata/trinotate_annotation_GOblastx_forTopGO.txt"
+
+geneID2GO <- readMappings(
+  file = mappingFile
+)
+
+cat("Genes in GO mapping:",
+    length(geneID2GO),
+    "\n")
+# Genes in GO mapping: 86453 
+
+#### Filter GO terms by size ####
+allGO <- table(unlist(geneID2GO))
+
+keepTerms <- names(allGO)[
+  allGO >= 5 &
+    allGO <= 500
+]
+
+geneID2GO.filtered <- lapply(
+  geneID2GO,
+  function(x) intersect(x, keepTerms)
+)
+
+geneID2GO.filtered <- geneID2GO.filtered[
+  lengths(geneID2GO.filtered) > 0
+]
+length(geneID2GO.filtered)
+# filtered list = 71320 
+# Create a Function to Run a TopGo contrast
+run_topGO_contrast <- function(
+    infile,
+    outfile,
+    ontology = "BP",
+    padj.cutoff = 0.05){
+  
+  deseq <- read.csv(
+    infile,
+    stringsAsFactors = FALSE
+  )
+  
+  deseq <- subset(
+    deseq,
+    !is.na(padj)
+  )
+  
+  geneList <- factor(
+    as.integer(deseq$padj < padj.cutoff)
+  )
+  
+  names(geneList) <- deseq$shortID
+  
+  cat("\nGenes tested:",
+      length(geneList))
+  
+  cat("\nSignificant genes:",
+      sum(geneList == 1),
+      "\n")
+  
+  GOdata <- new(
+    "topGOdata",
+    ontology = ontology,
+    allGenes = geneList,
+    geneSelectionFun = function(x) x == 1,
+    annot = annFUN.gene2GO,
+    gene2GO = geneID2GO.filtered
+  )
+  
+  resultWeight <- runTest(
+    GOdata,
+    algorithm = "weight01",
+    statistic = "fisher"
+  )
+  
+  GOresults <- GenTable(
+    GOdata,
+    weightFisher = resultWeight,
+    orderBy = "weightFisher",
+    topNodes = 100
+  )
+  
+  write.csv(
+    GOresults,
+    outfile,
+    row.names = FALSE
+  )
+  
+  return(GOresults)
+}
+
+#### Run our TopGO function for the three different contrasts ####
+GO_OA_F0 <- run_topGO_contrast(
+  "/gpfs1/home/a/s/asmit168/eco_genomics_2026/transcriptomics/myresults/F0_OAvsAM_results.csv",
+  "/gpfs1/home/a/s/asmit168/eco_genomics_2026/transcriptomics/myresults/GO_F0_OAvsAM_BP.csv"
+)
+
+GO_OW_F0 <- run_topGO_contrast(
+  "/gpfs1/home/a/s/asmit168/eco_genomics_2026/transcriptomics/myresults/F0_OWvsAM_results.csv",
+  "/gpfs1/home/a/s/asmit168/eco_genomics_2026/transcriptomics/myresults/GO_F0_OWvsAM_BP.csv"
+)
+
+GO_OWA_F0 <- run_topGO_contrast(
+  "/gpfs1/home/a/s/asmit168/eco_genomics_2026/transcriptomics/myresults/F0_OWAvsAM_results.csv",
+  "/gpfs1/home/a/s/asmit168/eco_genomics_2026/transcriptomics/myresults/GO_F0_OWAvsAM_BP.csv"
+)
+
+#### Make a bubble plot of the top 10 GO categories (OWA vs AM) ####
+# Read TopGO results
+go <- read.csv(
+  "/gpfs1/home/a/s/asmit168/eco_genomics_2026/transcriptomics/myresults/GO_F0_OWAvsAM_BP.csv",
+  stringsAsFactors = FALSE
+)
+
+# Convert p-values to numeric
+go$weightFisher <- gsub("^<\\s*", "", go$weightFisher)
+
+go$weightFisher <- as.numeric(go$weightFisher)
+
+# Convert counts to numeric
+go$Significant <- as.numeric(go$Significant)
+
+# Create -log10(p)
+go$minusLogP <- -log10(go$weightFisher)
+
+# Keep top 10 GO terms
+go_top10 <- go %>%
+  arrange(weightFisher) %>%
+  slice(1:10)
+
+# Order terms for plotting
+go_top10$Term <- factor(
+  go_top10$Term,
+  levels = rev(go_top10$Term)
+)
+
+# Bubble plot
+F0_OWA <- ggplot(
+  go_top10,
+  aes(
+    x = minusLogP,
+    y = Term
+  )
+) +
+  geom_point(
+    aes(
+      size = Significant/Annotated,
+      color = minusLogP
     )
+  ) +
+  scale_color_viridis_c() +
+  theme_bw(base_size = 10) +
+  labs(
+    title = "Top GO Terms: OWA vs AM",
+    x = expression(-logp),
+    y = "GO Term",
+    color = expression(-logp),
+    size = "Proportion Significant\nGenes"
   )
-
-# Correlation for noting on the plot 
-r <- cor(plot_df$LFC_OWA,
-         plot_df$LFC_OW,
-         use = "complete.obs")
-
-# Arrange the genes by significant to make the plotting easier/more interesting to see
-# ggplot plots in the order of the df, so random
-
-plot_df$SigGroup <- factor(
-  plot_df$SigGroup,
-  levels = c("Neither", "OWA only", "OW only", "Both")
+F0_OWA
+#### Make a bubble plot of the top 10 GO categories (OW vs AM) ####
+# Read TopGO results
+go <- read.csv(
+  "/gpfs1/home/a/s/asmit168/eco_genomics_2026/transcriptomics/myresults/GO_F0_OWvsAM_BP.csv",
+  stringsAsFactors = FALSE
 )
 
-plot_df <- plot_df %>%
-  arrange(SigGroup)
+# Convert p-values to numeric
+go$weightFisher <- gsub("^<\\s*", "", go$weightFisher)
 
-# Now make the plot!
+go$weightFisher <- as.numeric(go$weightFisher)
 
-ggplot(plot_df,
-       aes(x = LFC_OW,
-           y = LFC_OWA,
-           color = SigGroup)) +
-  
-  geom_point(alpha = 0.6, size = 1.5) +
-  
-  geom_abline(intercept = 0,
-              slope = 1,
-              linetype = "dashed",
-              color = "black") +
-  
-  geom_hline(yintercept = 0,
-             color = "grey70") +
-  
-  geom_vline(xintercept = 0,
-             color = "grey70") +
-  
-  annotate("text",
-           x = min(plot_df$LFC_OW, na.rm = TRUE),
-           y = max(plot_df$LFC_OWA, na.rm = TRUE),
-           hjust = 0,
-           label = paste0("r = ", round(r, 3))) +
-  
-  scale_color_manual(values = c(
-    "Both" = "purple",
-    "OWA only" = "#CC3333",
-    "OW only" = "#00A08A",
-    "Neither" = "grey80"
-  )) +
-  
-  coord_fixed() + # forces the same scaling on x and y axes
-  
-  labs(
-    x = "Log2 Fold Change: OW vs AM",
-    y = "Log2 Fold Change: OWA vs AM",
-    color = "",
-    title = "GE Responses to OW relative to OWA"
-  ) +
-  
-  theme_bw(base_size = 14) +
-  theme(
-    panel.grid = element_blank(),
-    legend.position = "right"
+# Convert counts to numeric
+go$Significant <- as.numeric(go$Significant)
+
+# Create -log10(p)
+go$minusLogP <- -log10(go$weightFisher)
+
+# Keep top 10 GO terms
+go_top10 <- go %>%
+  arrange(weightFisher) %>%
+  slice(1:10)
+
+# Order terms for plotting
+go_top10$Term <- factor(
+  go_top10$Term,
+  levels = rev(go_top10$Term)
+)
+
+# Bubble plot
+F0_OW <- ggplot(
+  go_top10,
+  aes(
+    x = minusLogP,
+    y = Term
   )
+) +
+  geom_point(
+    aes(
+      size = Significant/Annotated,
+      color = minusLogP
+    )
+  ) +
+  scale_color_viridis_c() +
+  theme_bw(base_size = 10) +
+  labs(
+    title = "Top GO Terms: OW vs AM",
+    x = expression(-logp),
+    y = "GO Term",
+    color = expression(-logp),
+    size = "Proportion Significant\nGenes"
+  )
+
+#### Make a bubble plot of the top 10 GO categories (OWA vs AM) ####
+# Read TopGO results
+go <- read.csv(
+  "/gpfs1/home/a/s/asmit168/eco_genomics_2026/transcriptomics/myresults/GO_F0_OAvsAM_BP.csv",
+  stringsAsFactors = FALSE
+)
+
+# Convert p-values to numeric
+go$weightFisher <- gsub("^<\\s*", "", go$weightFisher)
+
+go$weightFisher <- as.numeric(go$weightFisher)
+
+# Convert counts to numeric
+go$Significant <- as.numeric(go$Significant)
+
+# Create -log10(p)
+go$minusLogP <- -log10(go$weightFisher)
+
+# Keep top 10 GO terms
+go_top10 <- go %>%
+  arrange(weightFisher) %>%
+  slice(1:10)
+
+# Order terms for plotting
+go_top10$Term <- factor(
+  go_top10$Term,
+  levels = rev(go_top10$Term)
+)
+
+# Bubble plot
+F0_OA <- ggplot(
+  go_top10,
+  aes(
+    x = minusLogP,
+    y = Term
+  )
+) +
+  geom_point(
+    aes(
+      size = Significant/Annotated,
+      color = minusLogP
+    )
+  ) +
+  scale_color_viridis_c() +
+  theme_bw(base_size = 10) +
+  labs(
+    title = "Top GO Terms: OA vs AM",
+    x = expression(-logp),
+    y = "GO Term",
+    color = expression(-logp),
+    size = "Proportion Significant\nGenes"
+  )
+
+## F4 -------------------------------------------------------------------------
+#### The first step is to create the saved results files with the abbreviated trinity ids ####
+# OWA vs AM
+res_OWAvsAM.df <- as.data.frame(res_OWAvsAM_F4)
+res_OWAvsAM.df$fullID <- rownames(res_OWAvsAM.df)
+
+parts <- strsplit(res_OWAvsAM.df$fullID, "::")
+
+res_OWAvsAM.df$shortID <- sapply(
+  parts,
+  function(x) paste(x[1:2], collapse="::")
+)
+
+write.csv(
+  res_OWAvsAM.df,
+  "/gpfs1/home/a/s/asmit168/eco_genomics_2026/transcriptomics/myresults/F4_OWAvsAM_results.csv",
+  row.names = FALSE
+)
+# OW vs AM
+res_OWvsAM.df <- as.data.frame(res_OWvsAM_F4)
+res_OWvsAM.df$fullID <- rownames(res_OWvsAM.df)
+
+parts <- strsplit(res_OWvsAM.df$fullID, "::")
+
+res_OWvsAM.df$shortID <- sapply(
+  parts,
+  function(x) paste(x[1:2], collapse="::")
+)
+
+write.csv(
+  res_OWvsAM.df,
+  "/gpfs1/home/a/s/asmit168/eco_genomics_2026/transcriptomics/myresults/F4_OWvsAM_results.csv",
+  row.names = FALSE
+)
+# OA vs AM
+res_OAvsAM.df <- as.data.frame(res_OAvsAM_F4)
+res_OAvsAM.df$fullID <- rownames(res_OAvsAM.df)
+
+parts <- strsplit(res_OAvsAM.df$fullID, "::")
+
+res_OAvsAM.df$shortID <- sapply(
+  parts,
+  function(x) paste(x[1:2], collapse="::")
+)
+
+write.csv(
+  res_OAvsAM.df,
+  "/gpfs1/home/a/s/asmit168/eco_genomics_2026/transcriptomics/myresults/F4_OAvsAM_results.csv",
+  row.names = FALSE
+)
+
+# Prep to run the TopGo analysis
+library(topGO)
+
+mappingFile <- "/gpfs1/home/a/s/asmit168/eco_genomics_2026/transcriptomics/mydata/trinotate_annotation_GOblastx_forTopGO.txt"
+
+geneID2GO <- readMappings(
+  file = mappingFile
+)
+
+cat("Genes in GO mapping:",
+    length(geneID2GO),
+    "\n")
+# Genes in GO mapping: 86453 
+
+#### Filter GO terms by size ####
+allGO <- table(unlist(geneID2GO))
+
+keepTerms <- names(allGO)[
+  allGO >= 5 &
+    allGO <= 500
+]
+
+geneID2GO.filtered <- lapply(
+  geneID2GO,
+  function(x) intersect(x, keepTerms)
+)
+
+geneID2GO.filtered <- geneID2GO.filtered[
+  lengths(geneID2GO.filtered) > 0
+]
+length(geneID2GO.filtered)
+# filtered list = 71320 
+# Create a Function to Run a TopGo contrast
+run_topGO_contrast <- function(
+    infile,
+    outfile,
+    ontology = "BP",
+    padj.cutoff = 0.05){
+  
+  deseq <- read.csv(
+    infile,
+    stringsAsFactors = FALSE
+  )
+  
+  deseq <- subset(
+    deseq,
+    !is.na(padj)
+  )
+  
+  geneList <- factor(
+    as.integer(deseq$padj < padj.cutoff)
+  )
+  
+  names(geneList) <- deseq$shortID
+  
+  cat("\nGenes tested:",
+      length(geneList))
+  
+  cat("\nSignificant genes:",
+      sum(geneList == 1),
+      "\n")
+  
+  GOdata <- new(
+    "topGOdata",
+    ontology = ontology,
+    allGenes = geneList,
+    geneSelectionFun = function(x) x == 1,
+    annot = annFUN.gene2GO,
+    gene2GO = geneID2GO.filtered
+  )
+  
+  resultWeight <- runTest(
+    GOdata,
+    algorithm = "weight01",
+    statistic = "fisher"
+  )
+  
+  GOresults <- GenTable(
+    GOdata,
+    weightFisher = resultWeight,
+    orderBy = "weightFisher",
+    topNodes = 100
+  )
+  
+  write.csv(
+    GOresults,
+    outfile,
+    row.names = FALSE
+  )
+  
+  return(GOresults)
+}
+
+#### Run our TopGO function for the three different contrasts ####
+GO_OA_F4 <- run_topGO_contrast(
+  "/gpfs1/home/a/s/asmit168/eco_genomics_2026/transcriptomics/myresults/F4_OAvsAM_results.csv",
+  "/gpfs1/home/a/s/asmit168/eco_genomics_2026/transcriptomics/myresults/GO_F4_OAvsAM_BP.csv"
+)
+
+GO_OW_F4 <- run_topGO_contrast(
+  "/gpfs1/home/a/s/asmit168/eco_genomics_2026/transcriptomics/myresults/F4_OWvsAM_results.csv",
+  "/gpfs1/home/a/s/asmit168/eco_genomics_2026/transcriptomics/myresults/GO_F4_OWvsAM_BP.csv"
+)
+
+GO_OWA_F4 <- run_topGO_contrast(
+  "/gpfs1/home/a/s/asmit168/eco_genomics_2026/transcriptomics/myresults/F4_OWAvsAM_results.csv",
+  "/gpfs1/home/a/s/asmit168/eco_genomics_2026/transcriptomics/myresults/GO_F4_OWAvsAM_BP.csv"
+)
+
+#### Make a bubble plot of the top 10 GO categories (OWA vs AM) ####
+# Read TopGO results
+go <- read.csv(
+  "/gpfs1/home/a/s/asmit168/eco_genomics_2026/transcriptomics/myresults/GO_F4_OWAvsAM_BP.csv",
+  stringsAsFactors = FALSE
+)
+
+# Convert p-values to numeric
+go$weightFisher <- gsub("^<\\s*", "", go$weightFisher)
+
+go$weightFisher <- as.numeric(go$weightFisher)
+
+# Convert counts to numeric
+go$Significant <- as.numeric(go$Significant)
+
+# Create -log10(p)
+go$minusLogP <- -log10(go$weightFisher)
+
+# Keep top 10 GO terms
+go_top10 <- go %>%
+  arrange(weightFisher) %>%
+  slice(1:10)
+
+# Order terms for plotting
+go_top10$Term <- factor(
+  go_top10$Term,
+  levels = rev(go_top10$Term)
+)
+
+# Bubble plot
+F4_OWA <- ggplot(
+  go_top10,
+  aes(
+    x = minusLogP,
+    y = Term
+  )
+) +
+  geom_point(
+    aes(
+      size = Significant/Annotated,
+      color = minusLogP
+    )
+  ) +
+  scale_color_viridis_c() +
+  theme_bw(base_size = 10) +
+  labs(
+    title = "Top GO Terms: OWA vs AM",
+    x = expression(-logp),
+    y = "GO Term",
+    color = expression(-logp),
+    size = "Proportion Significant\nGenes"
+  )
+F4_OWA
+#### Make a bubble plot of the top 10 GO categories (OW vs AM) ####
+# Read TopGO results
+go <- read.csv(
+  "/gpfs1/home/a/s/asmit168/eco_genomics_2026/transcriptomics/myresults/GO_F4_OWvsAM_BP.csv",
+  stringsAsFactors = FALSE
+)
+
+# Convert p-values to numeric
+go$weightFisher <- gsub("^<\\s*", "", go$weightFisher)
+
+go$weightFisher <- as.numeric(go$weightFisher)
+
+# Convert counts to numeric
+go$Significant <- as.numeric(go$Significant)
+
+# Create -log10(p)
+go$minusLogP <- -log10(go$weightFisher)
+
+# Keep top 10 GO terms
+go_top10 <- go %>%
+  arrange(weightFisher) %>%
+  slice(1:10)
+
+# Order terms for plotting
+go_top10$Term <- factor(
+  go_top10$Term,
+  levels = rev(go_top10$Term)
+)
+
+# Bubble plot
+F4_OW <- ggplot(
+  go_top10,
+  aes(
+    x = minusLogP,
+    y = Term
+  )
+) +
+  geom_point(
+    aes(
+      size = Significant/Annotated,
+      color = minusLogP
+    )
+  ) +
+  scale_color_viridis_c() +
+  theme_bw(base_size = 10) +
+  labs(
+    title = "Top GO Terms: OW vs AM",
+    x = expression(-logp),
+    y = "GO Term",
+    color = expression(-logp),
+    size = "Proportion Significant\nGenes"
+  )
+F4_OW
+#### Make a bubble plot of the top 10 GO categories (OWA vs AM) ####
+# Read TopGO results
+go <- read.csv(
+  "/gpfs1/home/a/s/asmit168/eco_genomics_2026/transcriptomics/myresults/GO_F4_OAvsAM_BP.csv",
+  stringsAsFactors = FALSE
+)
+
+# Convert p-values to numeric
+go$weightFisher <- gsub("^<\\s*", "", go$weightFisher)
+
+go$weightFisher <- as.numeric(go$weightFisher)
+
+# Convert counts to numeric
+go$Significant <- as.numeric(go$Significant)
+
+# Create -log10(p)
+go$minusLogP <- -log10(go$weightFisher)
+
+# Keep top 10 GO terms
+go_top10 <- go %>%
+  arrange(weightFisher) %>%
+  slice(1:10)
+
+# Order terms for plotting
+go_top10$Term <- factor(
+  go_top10$Term,
+  levels = rev(go_top10$Term)
+)
+
+# Bubble plot
+F4_OA <- ggplot(
+  go_top10,
+  aes(
+    x = minusLogP,
+    y = Term
+  )
+) +
+  geom_point(
+    aes(
+      size = Significant/Annotated,
+      color = minusLogP
+    )
+  ) +
+  scale_color_viridis_c() +
+  theme_bw(base_size = 10) +
+  labs(
+    title = "Top GO Terms: OA vs AM",
+    x = expression(-logp),
+    y = "GO Term",
+    color = expression(-logp),
+    size = "Proportion Significant\nGenes"
+  )
+F4_OA
+
+## Combine all 6 into 1 figure? ##
+
+ggarrange(F0_OWA, F0_OW, F0_OA, F4_OWA, F4_OW, F4_OA, nrow = 2, ncol = 3, legend = "right", common.legend = TRUE)
+
 
