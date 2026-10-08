@@ -661,3 +661,27 @@ Bubble Plot OW vs AM
 Bubble Plot OA vs AM
 
 ![](myresults/BubbleOA.png)
+
+------------------------------------------------------------------------
+
+## 10/08/2026 - WGCNA Notes (no coding)
+
+-   4 - network construction: every gene gets a correlation value with every other gene
+
+    -   blockwiseModules - gene blocks that cluster together, define sizes, TOMType = reduce noise, signed model changes how the genes are grouped together to make direction of gene change matter, positive is increasing together, negative is downregulated, power = how tight to cluster, randomseed = reproducability. Play around with tree heights to see what changes, and power, and TOMType
+
+-   Output: eigen = pairwise correlation, we got 11 modules of correlations, and each gene can cluster highly in multiple modules.
+
+-   Dendrogram: modules are shown with colors, cluster all genes by similarity, mergecutheight helps determine how many modules to separate into. Lower = more modules, higher = less (think of it like a phylogenetic tree arrangement). grey = all genes that did not fall into any other module (trash)
+
+-   study done to phenotype copopods and associate with gene expression, sample metadata and look at traits. Mean fitness of individual, egg productuion rate, survival, egg hatch rate, development time. Associate genes to these traits
+
+-   visualize module-trait associations as a heatmap = start to distinguish down vs upregulated genes,
+
+-   looking at yellow module and rownames (names of genes in module), gives trinity numbers, can run these modules thru go analysis to start to guess at their biological functions.
+
+-   can compare clusters across generations
+
+-   pull out HUB genes and look into them
+
+-   heatmap to look at global expression across generations and treatment of all the genes and how they behave similarly.
