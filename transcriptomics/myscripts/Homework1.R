@@ -636,7 +636,7 @@ F0_OA <- ggplot(
     )
   ) +
   scale_color_viridis_c() +
-  theme_bw(base_size = 10) +
+  theme_bw(base_size = 14) +
   labs(
     title = "Top GO Terms: OA vs AM",
     x = expression(-logp),
@@ -644,7 +644,7 @@ F0_OA <- ggplot(
     color = expression(-logp),
     size = "Proportion Significant\nGenes"
   )
-
+F0_OA
 ## F4 -------------------------------------------------------------------------
 #### The first step is to create the saved results files with the abbreviated trinity ids ####
 # OWA vs AM
