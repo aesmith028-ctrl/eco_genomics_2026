@@ -955,7 +955,7 @@ F4_OA <- ggplot(
     )
   ) +
   scale_color_viridis_c() +
-  theme_bw(base_size = 10) +
+  theme_bw(base_size = 14) +
   labs(
     title = "Top GO Terms: OA vs AM",
     x = expression(-logp),
