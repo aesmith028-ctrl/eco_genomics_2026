@@ -109,7 +109,7 @@ bcftools view -H Lottia_gigantea_biallelic.vcf.gz | head -n 5 | less -S
 **Filtering The VCF**
 
 | Filter | Threshold | Why |
-|------------------|------------------|------------------------------------|
+|-------------------|-------------------|-----------------------------------|
 | Variant type | Biallelic SNPs only | Indels and sites with more than two alleles are harder to call reliably, and many are sequencing errors |
 | Site Quality (QUAL) | ≥ 30 | A Phred score of 30 means a 1 in 1,000 chance that the call is wrong |
 | Genotype Depth | ≥ 3 reads | Genotypes supported by very few reads are unreliable, so they are set to missing |
@@ -229,8 +229,6 @@ bcftools query -f '%CHROM\t%POS\t%REF\t%ALT[\t%GT]\n' \
 
 **Output Files**
 
-`/gpfs1/home/a/s/asmit168/eco_genomics_2026/transcriptomics/Population_Genomics_Notebook.md`
-
 **Programs and dependencies:**
 
 -   `R version 4.5.1`
@@ -241,7 +239,7 @@ bcftools query -f '%CHROM\t%POS\t%REF\t%ALT[\t%GT]\n' \
 
 **Scripts:**
 
-`none; all code run in terminal`
+`PCA_10_20_26.R in myscripts`
 
 **Code:**
 
@@ -250,9 +248,12 @@ bcftools query -f '%CHROM\t%POS\t%REF\t%ALT[\t%GT]\n' \
 # First, make a folder for today’s work and move into it.
 
 # Then store the location of the VCF in a variable, so we don’t have to type the full path every time:
-mkdir -p ~/eco_genomics_2026/population_genomics/myresults/Population_Structure 
+mkdir -p ~/eco_genomics_2026/population_genomics/mydata/Population_Structure 
 
 # where the VCF lives (make sure this is the right path!)
+
+## REMEMBER: you need to run this every time you open a VACC session as it does not save this variable ##
+
 DATA_DIR=~/eco_genomics_2026/population_genomics/mydata
 VCF=$DATA_DIR/Lottia_gigantea_pl_flt3.renamed.vcf.gz
 
@@ -262,4 +263,109 @@ ls -lh $VCF
 
 cd $DATA_DIR
 pwd ##check you are in the right place
+
+# within Population_Structure in mydata, I have all of PCA, admixture, and metadata files stored #
+
+#### Pruning with Plink ####
+# Load plink and check the version. We need PLINK 1.9: PLINK 2.0 (plink2) changed a lot of the syntax, and not all of the commands below will work with it.
+module load plink
+plink --version   # PLINK v1.9.0-b.7.7 64-bit (22 Oct 2024)
+
+# created for human genomics, so our data is lacking in comparison, therefore we need to format our data in a way that plink will be able to read
+#The \ at the end of a line tells bash that the command continues on the next line. It must be the very last character on the line, with no spaces after it.
+
+#Let’s run through what we asked plink to do. plink --help lists every option, and plink --help indep-pairwise gives the manual for just one.
+plink --vcf $VCF --double-id --allow-extra-chr \
+    --set-missing-var-ids @:# \
+    --indep-pairwise 50 10 0.2 \
+    --out Lg_LD_0.2
+# how many SNPs did we keep and remove?
+wc -l Lg_LD_0.2.prune.in Lg_LD_0.2.prune.out
+  # 549850 Lg_LD_0.2.prune.in
+  # 1271900 Lg_LD_0.2.prune.out
+  # 1821750 total
+#### Plink output Files ####
+# File	                     Contents
+# Lg_LD_0.2.prune.in	  -      IDs of the SNPs to keep (LD pruned data)
+# Lg_LD_0.2.prune.out	  -      IDs of the SNPs to remove (SNPs in LD > 0.2)
+# Lg_LD_0.2.log	        -      Everything plink printed to the screen. Check here how many SNPs and samples were read in
+# Lg_LD_0.2.nosex	      -      The samples with no sex information, which is all of ours. plink expects sexes for human data, so you can ignore this file
+
+#### RUNNING PCA ####
+# Now we run the PCA on just the SNPs we kept:
+plink --vcf $VCF --double-id --allow-extra-chr --set-missing-var-ids @:# \
+    --extract Lg_LD_0.2.prune.in \
+    --make-bed --pca --out Lg_LD_0.2
+## Output Files ##
+# Lg_LD_0.2.eigenvec ==	The PCA results: one row per individual, with its family ID, individual ID, then its score on PC1 to PC20
+# Lg_LD_0.2.eigenval	==  The eigenvalue of each PC: how much of the variation it captures
+# Lg_LD_0.2.bed	==  The genotypes of the pruned SNPs, stored in a compressed binary format. You can’t read it as text, and it isn’t the same thing as a BED file of genome intervals!
+# Lg_LD_0.2.bim	 ==  One row per SNP: scaffold, SNP ID, genetic distance (0 = unknown), position, and the two alleles
+# Lg_LD_0.2.fam	 ==  One row per individual: family ID, individual ID, father, mother, sex and phenotype (0 or -9 = unknown)
+
+# Each row of the .eigenvec file holds an individual’s eigenvector values, i.e. its coordinates on each PC, which are what we plot. The eigenvalues tell us how much of the variation each PC captures. Take a quick look:
+# first 3 individuals, first 4 PCs (cut -f keeps only the columns we ask for)
+head -n 3 Lg_LD_0.2.eigenvec | cut -d " " -f 1-6
+cat Lg_LD_0.2.eigenval
+
+#### Plotting the PCA in R ####
+# all code done in PCA_10_20_26.R in myscripts
+
+#### ADMIXTURE ####
+  
+  # we did not actually run this ourselves as it would take forever and crash and bad things would happen?
+  
+  # we should expect 1-5 K values based on the data and thoughts on PCA
+  
+  # K=3 results in the smallest error value (best describes data accurately)
+  
+  # double carrot >> appends/adds rather than overwrites it 
+  
+  
 ```
+
+**pve scree plot**
+
+![](myresults/Population_Structure/variance_0.2.png)
+
+-   Full set not subset of data
+
+-   how many PCs should we actually look at to describe population structure?
+
+-   PCs beyond 3-4 are likely noise/don't look at them (1 and 2 most important)
+
+**PCA Plot**
+
+![](myresults/Population_Structure/Lg_0.2_pca.png)
+
+-   two most southern populations distinctly diverged from the rest, and it scales as a gradient across latitudes
+
+    **Latitudinal PCA**
+
+    ![](myresults/Population_Structure/Lg_0.2_pca_latitude.png)
+
+-   Both PCs are strongly correlated by latitude, PC2 likely better explanation of latitude gradient due to tighter clustering.
+
+-   strong effect of latitude on population structure
+
+    **Map Plot vs. PCA**
+
+    ![](myresults/Population_Structure/Lg_0.2_pca_map.png)
+
+**CV Plot**
+
+![](myresults/Population_Structure/cv_error.png)
+
+-   K = 3 looks best as it has the lowest cross-validation error
+
+-   when you make these plots, make sure you see it going down and back up again to make sure you did get the lowest error K value
+
+    **Admixture Plot**
+
+    ![](myresults/Population_Structure/admixture_K1-5.png)
+
+-   how all of the different K values assign each locality/population structure among localities
+
+-   k=3 we again see the last/southernmost as "outliers" or distinct, not super clean but neither was the PCA
+
+    **Takeaway from the Day**: likely 3 populations of limpet best describes population structure

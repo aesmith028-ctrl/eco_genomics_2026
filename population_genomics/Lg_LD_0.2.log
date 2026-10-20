@@ -1,0 +1,17 @@
+PLINK v1.9.0-b.7.7 64-bit (22 Oct 2024)
+Options in effect:
+  --allow-extra-chr
+  --double-id
+  --indep-pairwise 50 10 0.2
+  --out Lg_LD_0.2
+  --set-missing-var-ids @:#
+  --vcf
+
+Hostname: node300.cluster
+Working directory: /gpfs1/home/a/s/asmit168/eco_genomics_2026/population_genomics
+Start time: Tue Oct 20 15:37:52 2026
+
+Error: Missing --vcf parameter.
+For more information, try "plink --help <flag name>" or "plink --help | more".
+
+End time: Tue Oct 20 15:37:52 2026
