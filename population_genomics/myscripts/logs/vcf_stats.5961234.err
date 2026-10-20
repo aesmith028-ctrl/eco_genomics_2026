@@ -1,0 +1,23 @@
+/var/spool/slurm/d/job5961234/slurm_script: line 19: cd: too many arguments
+
+VCFtools - UNKNOWN
+(C) Adam Auton and Anthony Marcketta 2009
+
+Parameters as interpreted:
+	--gzvcf Lottia_gigantea_pl_flt3.renamed.vcf.gz
+	--missing-indv
+	--out /missing_data
+
+stat error: No such file or directory
+Error: Can't determine file type of Lottia_gigantea_pl_flt3.renamed.vcf.gz
+
+VCFtools - UNKNOWN
+(C) Adam Auton and Anthony Marcketta 2009
+
+Parameters as interpreted:
+	--gzvcf Lottia_gigantea_pl_flt3.renamed.vcf.gz
+	--depth
+	--out /depth_data
+
+stat error: No such file or directory
+Error: Can't determine file type of Lottia_gigantea_pl_flt3.renamed.vcf.gz
