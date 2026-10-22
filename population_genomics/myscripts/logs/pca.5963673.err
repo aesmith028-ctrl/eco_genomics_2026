@@ -1,0 +1,5 @@
+/var/spool/slurm/d/job5963673/slurm_script: line 14: /users/a/s/asmit168/eco_genomics_2026/population_genomics/mydata: Is a directory
+Error: Failed to open /Lottia_gigantea_pl_flt3.renamed.vcf.gz. (--vcf expects a
+complete filename; did you forget '.vcf' at the end?)
+Error: Failed to open /Lottia_gigantea_pl_flt3.renamed.vcf.gz. (--vcf expects a
+complete filename; did you forget '.vcf' at the end?)

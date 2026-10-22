@@ -32,7 +32,7 @@
 
 **Programs and dependencies:**
 
--   `R version 4.5.1`
+-   `R tidyverse 4.5.1`
 
 -   `R-Studio`
 
@@ -109,7 +109,7 @@ bcftools view -H Lottia_gigantea_biallelic.vcf.gz | head -n 5 | less -S
 **Filtering The VCF**
 
 | Filter | Threshold | Why |
-|-------------------|-------------------|-----------------------------------|
+|-------------------|-------------------|----------------------------------|
 | Variant type | Biallelic SNPs only | Indels and sites with more than two alleles are harder to call reliably, and many are sequencing errors |
 | Site Quality (QUAL) | ≥ 30 | A Phred score of 30 means a 1 in 1,000 chance that the call is wrong |
 | Genotype Depth | ≥ 3 reads | Genotypes supported by very few reads are unreliable, so they are set to missing |
@@ -231,7 +231,7 @@ bcftools query -f '%CHROM\t%POS\t%REF\t%ALT[\t%GT]\n' \
 
 **Programs and dependencies:**
 
--   `R version 4.5.1`
+-   `R tidyverse 4.5.1`
 
 -   `R-Studio`
 
@@ -285,11 +285,11 @@ wc -l Lg_LD_0.2.prune.in Lg_LD_0.2.prune.out
   # 1271900 Lg_LD_0.2.prune.out
   # 1821750 total
 #### Plink output Files ####
-# File	                     Contents
-# Lg_LD_0.2.prune.in	  -      IDs of the SNPs to keep (LD pruned data)
-# Lg_LD_0.2.prune.out	  -      IDs of the SNPs to remove (SNPs in LD > 0.2)
-# Lg_LD_0.2.log	        -      Everything plink printed to the screen. Check here how many SNPs and samples were read in
-# Lg_LD_0.2.nosex	      -      The samples with no sex information, which is all of ours. plink expects sexes for human data, so you can ignore this file
+# File                       Contents
+# Lg_LD_0.2.prune.in      -      IDs of the SNPs to keep (LD pruned data)
+# Lg_LD_0.2.prune.out     -      IDs of the SNPs to remove (SNPs in LD > 0.2)
+# Lg_LD_0.2.log         -      Everything plink printed to the screen. Check here how many SNPs and samples were read in
+# Lg_LD_0.2.nosex         -      The samples with no sex information, which is all of ours. plink expects sexes for human data, so you can ignore this file
 
 #### RUNNING PCA ####
 # Now we run the PCA on just the SNPs we kept:
@@ -297,11 +297,11 @@ plink --vcf $VCF --double-id --allow-extra-chr --set-missing-var-ids @:# \
     --extract Lg_LD_0.2.prune.in \
     --make-bed --pca --out Lg_LD_0.2
 ## Output Files ##
-# Lg_LD_0.2.eigenvec ==	The PCA results: one row per individual, with its family ID, individual ID, then its score on PC1 to PC20
-# Lg_LD_0.2.eigenval	==  The eigenvalue of each PC: how much of the variation it captures
-# Lg_LD_0.2.bed	==  The genotypes of the pruned SNPs, stored in a compressed binary format. You can’t read it as text, and it isn’t the same thing as a BED file of genome intervals!
-# Lg_LD_0.2.bim	 ==  One row per SNP: scaffold, SNP ID, genetic distance (0 = unknown), position, and the two alleles
-# Lg_LD_0.2.fam	 ==  One row per individual: family ID, individual ID, father, mother, sex and phenotype (0 or -9 = unknown)
+# Lg_LD_0.2.eigenvec == The PCA results: one row per individual, with its family ID, individual ID, then its score on PC1 to PC20
+# Lg_LD_0.2.eigenval    ==  The eigenvalue of each PC: how much of the variation it captures
+# Lg_LD_0.2.bed ==  The genotypes of the pruned SNPs, stored in a compressed binary format. You can’t read it as text, and it isn’t the same thing as a BED file of genome intervals!
+# Lg_LD_0.2.bim  ==  One row per SNP: scaffold, SNP ID, genetic distance (0 = unknown), position, and the two alleles
+# Lg_LD_0.2.fam  ==  One row per individual: family ID, individual ID, father, mother, sex and phenotype (0 or -9 = unknown)
 
 # Each row of the .eigenvec file holds an individual’s eigenvector values, i.e. its coordinates on each PC, which are what we plot. The eigenvalues tell us how much of the variation each PC captures. Take a quick look:
 # first 3 individuals, first 4 PCs (cut -f keeps only the columns we ask for)
@@ -369,3 +369,87 @@ cat Lg_LD_0.2.eigenval
 -   k=3 we again see the last/southernmost as "outliers" or distinct, not super clean but neither was the PCA
 
     **Takeaway from the Day**: likely 3 populations of limpet best describes population structure
+
+## 10/22/2026 - Genetic Diversity
+
+-   explain what nucleotide diversity (π), Tajima’s D and heterozygosity measure, and what can bias them
+
+-   calculate π and Tajima’s D in windows along the genome with vcftools, for all samples together and for each population
+
+-   estimate each individual’s heterozygosity and inbreeding coefficient (F)
+
+-   compare diversity among populations and along the genome in R
+
+**Working Directory**
+
+`/gpfs1/home/a/s/asmit168/eco_genomics_2026/population_genomics`
+
+**Input Files**
+
+`none`
+
+**Output Files**
+
+**Programs and dependencies:**
+
+-   `R tidyverse 4.5.1`
+
+-   `R-Studio`
+
+-   `load ecogen-rlibs`
+
+**Scripts:**
+
+Genetic_Diversity_10_22_26.R
+
+**Code:**
+
+``` bash
+#### Setting Up ####
+    #Point to the folder for today’s work and point the programme to   your VCF, for coding along, use the randomly subsetted VCF. We can also make a new directory within my results.
+
+cd ~/eco_genomics_2026/population_genomics/mydata
+
+module load vcftools
+vcftools --version   # UNKNOWN... module list = vcftools/0.1.16
+
+# the 1% subset from Class 1 (make sure this is the right path!)
+# We will assign our data directory and VCF now so we dont have to move around to find this. We will now call #$VCF when needed
+DATA_DIR=/users/a/s/asmit168/eco_genomics_2026/population_genomics/mydata/Genetic_Diversity 
+VCF=$DATA_DIR/Lottia_gigantea_pl_flt3_noMAF_sub0.01.vcf.gz
+
+#### A Population Map ####
+    # vcftools calculates statistics for whichever individuals we give it with --keep, which takes a file with one sample ID per line. To get statistics for each population, we need one of these files per population
+
+#First, make a population map from the metadata, with two tab-separated columns: the sample ID and its site.
+
+# check which columns hold the sample ID and the site
+head sample_metadata.csv
+
+# skip the header line (tail -n +2), keep columns 1 and 2 (cut),
+# and swap the comma between them for a tab (tr)
+tail -n +2 sample_metadata.csv | cut -d ',' -f 1,2 | tr ',' '\t' > popmap.txt
+head popmap.txt ##check it looks correct
+
+## Danny prepped all of the data folders (het, pi, pops, TajD) in BASH, explination on day 4 coding tutorial ##
+
+#### Coding in Genetic_Diversity_10_22_26.R ####
+
+
+
+
+```
+
+**Pi Plot**
+
+![](myresults/Genetic_Diversity/pi/pi_by_site.png)
+
+-   violin plot with a boxplot within, log10 scale for visuals
+
+-   INT population stands out to me as it has a lower nucleotide diversity than the rest of the populations (why?)
+
+-   Hard to distinguish patterns generally
+
+    **Taj D Plot**
+
+    ![](myresults/Genetic_Diversity/tajimasD_by_site.png)

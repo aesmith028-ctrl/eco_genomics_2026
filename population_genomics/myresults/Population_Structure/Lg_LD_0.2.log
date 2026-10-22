@@ -1,0 +1,21 @@
+PLINK v1.9.0-b.7.7 64-bit (22 Oct 2024)
+Options in effect:
+  --allow-extra-chr
+  --double-id
+  --extract /users/a/s/asmit168/eco_genomics_2026/population_genomics/myresults/Population_Structure/Lg_LD_0.2.prune.in
+  --make-bed
+  --out /users/a/s/asmit168/eco_genomics_2026/population_genomics/myresults/Population_Structure/Lg_LD_0.2
+  --pca
+  --set-missing-var-ids @:#
+  --vcf /Lottia_gigantea_pl_flt3.renamed.vcf.gz
+
+Hostname: node314.cluster
+Working directory: /gpfs1/home/a/s/asmit168/eco_genomics_2026/population_genomics/myscripts
+Start time: Tue Oct 20 17:17:54 2026
+
+Random number seed: 1792531074
+1031010 MB RAM detected; reserving 515505 MB for main workspace.
+Error: Failed to open /Lottia_gigantea_pl_flt3.renamed.vcf.gz. (--vcf expects a
+complete filename; did you forget '.vcf' at the end?)
+
+End time: Tue Oct 20 17:17:54 2026

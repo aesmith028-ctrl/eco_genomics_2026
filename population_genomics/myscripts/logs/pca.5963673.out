@@ -1,0 +1,28 @@
+
+PLINK v1.9.0-b.7.7 64-bit (22 Oct 2024)            cog-genomics.org/plink/1.9/
+(C) 2005-2024 Shaun Purcell, Christopher Chang   GNU General Public License v3
+Logging to /users/a/s/asmit168/eco_genomics_2026/population_genomics/myresults/Population_Structure/Lg_LD_0.2.log.
+Options in effect:
+  --allow-extra-chr
+  --double-id
+  --indep-pairwise 50 10 0.2
+  --out /users/a/s/asmit168/eco_genomics_2026/population_genomics/myresults/Population_Structure/Lg_LD_0.2
+  --set-missing-var-ids @:#
+  --vcf /Lottia_gigantea_pl_flt3.renamed.vcf.gz
+
+1031010 MB RAM detected; reserving 515505 MB for main workspace.
+PLINK v1.9.0-b.7.7 64-bit (22 Oct 2024)            cog-genomics.org/plink/1.9/
+(C) 2005-2024 Shaun Purcell, Christopher Chang   GNU General Public License v3
+Logging to /users/a/s/asmit168/eco_genomics_2026/population_genomics/myresults/Population_Structure/Lg_LD_0.2.log.
+Options in effect:
+  --allow-extra-chr
+  --double-id
+  --extract /users/a/s/asmit168/eco_genomics_2026/population_genomics/myresults/Population_Structure/Lg_LD_0.2.prune.in
+  --make-bed
+  --out /users/a/s/asmit168/eco_genomics_2026/population_genomics/myresults/Population_Structure/Lg_LD_0.2
+  --pca
+  --set-missing-var-ids @:#
+  --vcf /Lottia_gigantea_pl_flt3.renamed.vcf.gz
+
+1031010 MB RAM detected; reserving 515505 MB for main workspace.
+my script is done
