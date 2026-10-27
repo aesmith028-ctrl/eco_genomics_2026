@@ -370,6 +370,8 @@ cat Lg_LD_0.2.eigenval
 
     **Takeaway from the Day**: likely 3 populations of limpet best describes population structure
 
+------------------------------------------------------------------------
+
 ## 10/22/2026 - Genetic Diversity
 
 -   explain what nucleotide diversity (π), Tajima’s D and heterozygosity measure, and what can bias them
@@ -436,8 +438,6 @@ head popmap.txt ##check it looks correct
 #### Coding in Genetic_Diversity_10_22_26.R ####
 
 
-
-
 ```
 
 **Pi Plot**
@@ -450,6 +450,230 @@ head popmap.txt ##check it looks correct
 
 -   Hard to distinguish patterns generally
 
-    **Taj D Plot**
+------------------------------------------------------------------------
 
-    ![](myresults/Genetic_Diversity/tajimasD_by_site.png)
+## 10/27/2026 - Genetic Diversity Day 2
+
+-   explain what nucleotide diversity (π), Tajima’s D and heterozygosity measure, and what can bias them
+
+-   calculate π and Tajima’s D in windows along the genome with vcftools, for all samples together and for each population
+
+-   estimate each individual’s heterozygosity and inbreeding coefficient (F)
+
+-   compare diversity among populations and along the genome in R
+
+**Working Directory**
+
+`/gpfs1/home/a/s/asmit168/eco_genomics_2026/population_genomics`
+
+**Input Files**
+
+`none`
+
+**Output Files**
+
+figures in myresults/Genetic_Diversity
+
+**Programs and dependencies:**
+
+-   `R tidyverse 4.5.1`
+
+-   `R-Studio`
+
+-   `load ecogen-rlibs`
+
+**Scripts:**
+
+Genetic_Diversity_10_22_26.R
+
+**Code:**
+
+``` bash
+#### Coding in Genetic_Diversity_10_22_26.R ####
+# picking up at end of script for day 2 of same day 4 coding tutorial
+
+#### Heterozygosity ####
+
+#Observed heterozygosity (HO) is the proportion of sites at which an individual is heterozygous.
+
+#Expected heterozygosity (HE) is the proportion we would expect if the population mated at random (Hardy–Weinberg equilibrium): 2pq at each site, where p and q are the allele frequencies.
+
+#The inbreeding coefficient compares the two: F = 1 − HO / HE. F = 0 means an individual is as heterozygous as expected, F > 0 means less heterozygous, and F < 0 means more.
+
+## F coeff ##
+
+#F  Possible causes
+#Positive (too few heterozygotes)   
+  #Inbreeding (mating between relatives); genotyping errors, especially at low   coverage, where heterozygotes are miscalled as homozygotes
+
+#Negative (too many heterozygotes)  
+  #Mating between divergent populations; mapping errors, where reads from duplicated regions (paralogs) pile up on one locus and look like heterozygotes in everyone
+```
+
+**Pi Lat Plot**
+
+![](myresults/Genetic_Diversity/pi/pi_vs_latitude.png)
+
+**Scan Plot**
+
+![](myresults/Genetic_Diversity/pi/pi_along_scaffold.png)
+
+-   int is probably sequencing error or a site of extremly low diversity, should look into it to understand further.
+
+-   if everything was neutral, everything would fix or dispensary. sites of diversity and consistent diversity means something is keeping equilibrium, preventing a sweep or extinction, so they are points of interest in the genome. Could be conditionally beneficial in different environments (balancing selection).
+
+**Taj D Plot**
+
+![](myresults/Genetic_Diversity/tajimasD_by_site.png)
+
+-   most southern sites = higher temp = driving selection, but overall everything is fairly uniform looking.
+
+**Heterozygosity by Site Raincloud Plot**
+
+![](myresults/Genetic_Diversity/het/Ho_by_site.png){width="1200"}
+
+-   difficult to pick up on patterns, besides intake having a lower He than everything else (like scan plot)
+
+-   higher He at ends, lower at center ranges
+
+-   some locations have all individuals with the same/tightly clustered He, while others are have individuals with evenly spread He values.
+
+**Inbreeding coeff (F) Plot**
+
+![](myresults/Genetic_Diversity/het/F_by_site.png)
+
+-   Intake has high F coeff = excess of inbreeding
+
+------------------------------------------------------------------------
+
+## 10/27/2026 - Signatures of Selection
+
+-   Explain what is meant by a signature of selection, and why genome scans look for outliers against a neutral genomic background
+
+-   Calculate genome-wide and windowed pairwise FST with vcftools, and plot an FST genome scan in R
+
+**Working Directory**
+
+`/gpfs1/home/a/s/asmit168/eco_genomics_2026/population_genomics`
+
+**Input Files**
+
+`none`
+
+**Output Files**
+
+**Programs and dependencies:**
+
+-   `R tidyverse 4.5.1`
+
+-   `R-Studio`
+
+-   `load ecogen-rlibs`
+
+**Scripts:**
+
+Signature_of_selection_10_27_26.R in myscripts
+
+**Code:**
+
+``` bash
+# Using Genetic Diversity for location of data, working in the terminal to get things set up before we code in R
+# set directory = DIR 
+DIR=/gpfs1/home/a/s/asmit168/eco_genomics_2026/population_genomics/mydata/Genetic_Diversity
+# copy pop_level_biooracle to mydata
+cp /gpfs1/cl/biol3990/PopulationGenomics/Selection/pop_level_biooracle.csv $DIR
+# It is worth checking that the sample IDs in the popmap match the IDs in the VCF exactly (capitals, underscores and any suffixes all matter), sometimes the IDs can end up with extra stuff e.g., filepaths.
+
+# sample IDs from the VCF header line (#CHROM ...), one per line
+zgrep -m 1 "^#CHROM" Lottia_gigantea_flt3_sub0.01.vcf.gz | cut -f 10- | tr '\t' '\n' > vcf_samples.txt
+wc -l vcf_samples.txt #should be 553 YEP
+head vcf_samples.txt # is it as expected? IDK, it printed ASU 01 thru 10 
+
+# As with last section, vcftools needs a separate text file for each population that lists the IDs of the individuals in it, one per line. You should have these saved in pops from the genetic diversity class, if not, the code is below:
+
+mkdir -p pops
+
+for pop in $(cut -f2 popmap.txt | sort -u); do
+  awk -F '\t' -v p="${pop}" '$2 == p {print $1}' popmap.txt > pops/${pop}.txt
+done
+
+ls pops/ # ASU.txt  CAB.txt  CHI.txt  GOV.txt  INT.txt  PUN.txt  SAN.txt  SHA.txt  TOR.txt  WIL.txt BOD.txt  CAR.txt  DIL.txt  HOP.txt  KRU.txt  ROS.txt  SCR.txt  SOB.txt  VAN.txt
+
+#### FST GENOME SCAN ####
+    #An important measure of population divergence is FST (the fixation index). FST asks how much of the total genetic variation is due to differences between populations.
+    #FST ranges from 0 (no genetic differentiation between the populations, i.e., panmixia) to 1 (complete fixation, i.e. very genetically divergent populations).
+
+
+#### Genome-wide FST between two populations ####
+
+
+# We start with two populations, lets use two populations we think may be quite diverged based on the PCA and Admixture evidence; the most southern and the most northern sites Bahía Asunción (ASU) and Kruse Ranch (KRU).
+
+# the further apart two populations, the larger the FST as they are more diverged from one another compared to if they were closer together (isolation by distance)
+##first make sure you are in the right directory
+## should be </users/d/s/dsadler1/projects/eco_genomics_2026/PopulationGenomics/mydata>
+cd $DIR
+
+###load vcftools
+module load gcc # gcc (Spack GCC) 13.3.0
+module load vcftools # # UNKNOWN... module list = vcftools/0.1.16
+
+###lets do the usual assigning of VCF:
+VCF=$DIR/Lottia_gigantea_flt3_sub0.01.vcf.gz
+POP1=ASU     # This can be any population, but lets do most southern ...
+POP2=KRU     # ... and most northern.
+
+mkdir -p fst #lets make a FST directory 
+
+###Ok now lets run vcftools 
+vcftools --gzvcf ${VCF} \
+  --weir-fst-pop pops/${POP1}.txt \
+  --weir-fst-pop pops/${POP2}.txt \
+  --out fst/${POP1}_vs_${POP2} \
+  2> fst/${POP1}_vs_${POP2}.log ##prints what would be displayed in the terminal to summarise mean FST
+
+grep "Fst estimate" fst/${POP1}_vs_${POP2}.log
+  # Outputting Weir and Cockerham Fst estimates:
+  #Weir and Cockerham mean Fst estimate: 0.016245
+  #Weir and Cockerham weighted Fst estimate: 0.020162
+head fst/${POP1}_vs_${POP2}.weir.fst
+
+# The log reports two genome-wide estimates:
+  # Mean FST: the average of the per-SNP FST values.
+  # Weighted FST: the variance among populations summed across all SNPs, divided by the total variance summed across all loci. This is the better genome-wide estimate to use as it has corrected for sample size.
+  #The .weir.fst file has one line per SNP, with the columns CHROM (chromosome), POS (position) and WEIR_AND_COCKERHAM_FST (FST value).
+  
+  
+#### Genome-wide FST between all pairs of populations ####
+
+
+# A loop calculates the genome-wide FST for every pair and collects the results in one table. Dont worry about the complexities of the code too much, this is pulled from other work, and is just an efficient way to run through many of the contrasts.
+
+POPS=( $(cut -f2 popmap.txt | sort -u) ) ##f extracts column, 2 extracts second column, sort -u keeps only unique values (i.e., gives you one row per pop)
+mkdir -p fst/pairwise
+echo -e "pop1\tpop2\tmean_fst\tweighted_fst" > fst/pairwise_fst_summary.txt #makes empty txt file headed as pop1 etc
+
+for (( i=0; i<${#POPS[@]}; i++ )); do
+  for (( j=i+1; j<${#POPS[@]}; j++ )); do
+    p1=${POPS[$i]}
+    p2=${POPS[$j]}
+    vcftools --gzvcf ${VCF} \
+      --weir-fst-pop pops/${p1}.txt \
+      --weir-fst-pop pops/${p2}.txt \
+      --out fst/pairwise/${p1}_vs_${p2} \
+      2> fst/pairwise/${p1}_vs_${p2}.log
+    mean=$(grep "mean Fst" fst/pairwise/${p1}_vs_${p2}.log | awk '{print $NF}')
+    weighted=$(grep "weighted Fst" fst/pairwise/${p1}_vs_${p2}.log | awk '{print $NF}')
+    echo -e "${p1}\t${p2}\t${mean}\t${weighted}" >> fst/pairwise_fst_summary.txt
+  done
+done
+
+
+column -t fst/pairwise_fst_summary.txt
+
+
+# SWITCH TO LOOKING AT RESULTS IN R #
+
+
+# all coding done in script Signature_of_selection_10_27_26.R 
+```
