@@ -436,7 +436,6 @@ head popmap.txt ##check it looks correct
 ## Danny prepped all of the data folders (het, pi, pops, TajD) in BASH, explination on day 4 coding tutorial ##
 
 #### Coding in Genetic_Diversity_10_22_26.R ####
-
 ```
 
 **Pi Plot**
@@ -709,9 +708,15 @@ head ${POP1}_vs_${POP2}_FST_10kb.windowed.weir.fst
 
 ![](myresults/Selection/fst_scan_ASU_vs_KRU.png)
 
+-   outlier detection, FST is a broad scan, look at highly differentiated regions of the genome between 2 contrasts.
+
+-   most southern sample vs. most northern sample
+
+-   relatively polygenic across genome
+
 ------------------------------------------------------------------------
 
-## 10/29/2026 - 
+## 10/29/2026 - Baypass
 
 **Working Directory**
 
@@ -738,4 +743,63 @@ Signature_of_selection_10_27_26.R in myscripts
 **Code:**
 
 ``` bash
+# all code done on Signature_of_selection_10_27_26.R #
+
+#### 4.2 Prepare the BayPass input files ####
+  # builds model based on prior information given, dynamic. uses correlation matrix to correct for demographic effect, creates metapopulation statistics across regions of genome across all populations. Plug in covariant models (environmental, contrast, biotic data, ets) = what is driving selection? 
+  # FST could pick up random allele frequency changes that look like selection. 
+  
+# uses allele counts not freq. (raw count, take depth differences for confidence into account)
+# run baypass 5 times (each time is a little different) and average across to get real usable data
+# get the files 
+cp -r /gpfs1/cl/biol3990/PopulationGenomics/Selection/baypass/* $DIR
+# move to script # 
 ```
+
+**BayPass Omega as Correlations Heatmap**
+
+![](myresults/Selection/baypass_omega.png)
+
+-   roughly 3 populations, one large core (big red square), and bottom left two smaller squares.
+
+-   differentiates populations (3) from sampling sites (19)
+
+**BayPass Tree**
+
+![](myresults/Selection/baypass_omega_tree.png)
+
+**BayPass XTX Pvalues Bar Chart**
+
+![](myresults/Selection/baypass_xtx_pvalues.png)
+
+**BayPass xtx scan manhattan plot**
+
+![](myresults/Selection/baypass_xtx_scan.png)
+
+**BayPass bf Scan Manhattan Plot**
+
+![](myresults/Selection/baypass_bf_scan.png)
+
+-   anything above 20 is key, anything negative is basically 0
+
+-   yes, we have outliers spread across, but a few regions have high bayfactor = that variable is having an effect on that area of the genome
+
+-   correlation between latitude and sea surface temperature, can see sorta overlapping peaks across the two plots.
+
+**BayPass top Temperature SNP Plot**
+
+![](myresults/Selection/baypass_top_sst_snp.png)
+
+-   not a clear pattern of temperature across allele frequency, maybe this SNP is not interesting as allele frequency does not vary much.
+
+-   would hope to see some relationship across the sites with temperature, but the allele frequency does not change as temperature changes.
+
+**Latitudinal SNP BayPass Plot**
+
+![](myresults/Selection/baypass_top_lat_snp.png)
+
+-   northern populations fixed for one of the alleles (ASU), and the rest are not
+
+-   This SNP stands out even when accounting for neutral population structure, looks somewhat similar in pattern to the omega heatmap
+
+-   explore more top SNPs = discover more patterns!
