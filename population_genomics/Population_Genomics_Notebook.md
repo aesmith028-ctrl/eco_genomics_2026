@@ -437,7 +437,6 @@ head popmap.txt ##check it looks correct
 
 #### Coding in Genetic_Diversity_10_22_26.R ####
 
-
 ```
 
 **Pi Plot**
@@ -676,4 +675,67 @@ column -t fst/pairwise_fst_summary.txt
 
 
 # all coding done in script Signature_of_selection_10_27_26.R 
+
+### BACK IN BASH for 3.4 ###
+
+###lets use the example two populations again.
+##remember you assigned VCF and POP1/2 earlier, check above if needed
+vcftools --gzvcf ${VCF} \
+--weir-fst-pop pops/${POP1}.txt \
+--weir-fst-pop pops/${POP2}.txt \
+--fst-window-size 10000 \
+--fst-window-step 10000 \
+--out fst/${POP1}_vs_${POP2}_FST_10kb \
+2> fst/${POP1}_vs_${POP2}_FST_10kb.log
+ # cd to fst 
+head ${POP1}_vs_${POP2}_FST_10kb.windowed.weir.fst
+
+### Back to R for 3.5 ###
+```
+
+**Pairwise FST Heatmap**
+
+![](myresults/Selection/pairwise_fst_heatmap.png)
+
+**Isolation by Distance scatter plot**
+
+![](myresults/Selection/fst_vs_distance.png)
+
+-   If FST increases with distance, the populations show isolation by distance: neighbouring populations exchange more migrants than distant ones.
+
+-   Isolation by distance is one of the demographic patterns that inflate false positives in simple FST scans, and it is exactly the kind of structure that BayPass accounts for in Part B.
+
+**FST Scan ASU vs KRU**
+
+![](myresults/Selection/fst_scan_ASU_vs_KRU.png)
+
+------------------------------------------------------------------------
+
+## 10/29/2026 - 
+
+**Working Directory**
+
+`/gpfs1/home/a/s/asmit168/eco_genomics_2026/population_genomics`
+
+**Input Files**
+
+`none`
+
+**Output Files**
+
+**Programs and dependencies:**
+
+-   `R tidyverse 4.5.1`
+
+-   `R-Studio`
+
+-   `load ecogen-rlibs`
+
+**Scripts:**
+
+Signature_of_selection_10_27_26.R in myscripts
+
+**Code:**
+
+``` bash
 ```
