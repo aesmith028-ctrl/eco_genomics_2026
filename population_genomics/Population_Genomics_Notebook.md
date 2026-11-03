@@ -803,3 +803,67 @@ cp -r /gpfs1/cl/biol3990/PopulationGenomics/Selection/baypass/* $DIR
 -   This SNP stands out even when accounting for neutral population structure, looks somewhat similar in pattern to the omega heatmap
 
 -   explore more top SNPs = discover more patterns!
+
+## 11/3/2026 - Genes and Gene Ontology
+
+-   Identify Gene Ontology (GO) terms that are over-represented among genes containing outlier SNPs, using topGO
+
+-   Identify the genes near outlier SNPs, and the type of change each SNP makes (gene types), using SnpEff output
+
+-   Bring together our results so far to start building a story
+
+**Working Directory**
+
+`/gpfs1/home/a/s/asmit168/eco_genomics_2026/population_genomics`
+
+**Input Files**
+
+`none`
+
+**Output Files**
+
+**Programs and dependencies:**
+
+-   `R tidyverse 4.5.1`
+
+-   `R-Studio`
+
+-   `load ecogen-rlibs`
+
+**Scripts:**
+
+Gene_Functions_11_3_26.R in myscripts
+
+**Code:**
+
+``` bash
+# get data for the day 
+cd /gpfs1/cl/biol3990/PopulationGenomics
+cp -r  Genes ~/eco_genomics_2026/population_genomics/mydata
+  # data we generated last week but with the full dataset, each file has a description on the walkthrough
+
+# all coding done in Gene_Functions_11_3_26.R #
+
+# 3.2 --> can run a blast for potentially interesting outlier gene that is lacking a GO term to try and figure out what it might do
+
+#### 4.4 What do our genes do? ####
+# We can check what our genes correspond to on NCBI Gene (https://www.ncbi.nlm.nih.gov/gene/) by searching for the gene ID. But you may notice we don’t get much, as we have a poorly annotated reference genome; many L. gigantea genes are listed only as “hypothetical protein”.
+
+# When that happens we can:
+  
+    # Get the protein sequence of the gene (from its NCBI record, or from UniProt).
+    # Search it against well-studied proteins with BLASTp (https://blast.ncbi.nlm.nih.gov/)
+    # Look for known protein domains, for example in InterPro (https://www.ebi.ac.uk/interpro/).
+
+#### 5 Part C: Bringing it all together ####
+```
+
+**TopGO Lollipop Plot**
+
+![](mydata/Genes/topGO_BP_.png)
+
+-   high XTX = less SNPs
+
+**Annotation Count Plot**
+
+![](myresultsannocount.png)
