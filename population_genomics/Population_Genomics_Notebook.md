@@ -203,7 +203,7 @@ bcftools query -f '%CHROM\t%POS\t%REF\t%ALT[\t%GT]\n' \
 
 #SBATCH --mail-type=ALL
 
-#SBATCH --[mail-user=NETID\@uvm.edu](mailto:mail-user=NETID@uvm.edu){.email}
+#SBATCH --[mail-user=asmit168\@uvm.edu](mailto:mail-user=NETID@uvm.edu){.email}
 
 ------------------------------------------------------------------------
 
