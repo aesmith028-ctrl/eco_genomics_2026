@@ -128,3 +128,4 @@ Starting main algorithm
 8 (QN/Block) 	Elapsed: 60.752	Loglikelihood: -4.06066e+08	(delta): 12055.7
 9 (QN/Block) 	Elapsed: 60.803	Loglikelihood: -4.06055e+08	(delta): 11501.6
 10 (QN/Block) 	Elapsed: 72.263	Loglikelihood: -4.06052e+08	(delta): 3124.94
+11 (QN/Block) 	Elapsed: 64.674	Loglikelihood: -4.06045e+08	(delta): 6522.83
