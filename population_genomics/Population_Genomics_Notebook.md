@@ -109,7 +109,7 @@ bcftools view -H Lottia_gigantea_biallelic.vcf.gz | head -n 5 | less -S
 **Filtering The VCF**
 
 | Filter | Threshold | Why |
-|-------------------|-------------------|----------------------------------|
+|----|----|----|
 | Variant type | Biallelic SNPs only | Indels and sites with more than two alleles are harder to call reliably, and many are sequencing errors |
 | Site Quality (QUAL) | ≥ 30 | A Phred score of 30 means a 1 in 1,000 chance that the call is wrong |
 | Genotype Depth | ≥ 3 reads | Genotypes supported by very few reads are unreliable, so they are set to missing |

@@ -154,7 +154,7 @@ read_q <- function(K) {
 
 # map_dfr() runs read_q() for each K and binds the results together row-wise
 # (change 2:5 to look at other values of K)
-q_all <- map_dfr(1:5, read_q) %>%
+q_all <- map_dfr(1:4, read_q) %>%
   left_join(meta, by = "ID") %>%
   # order sites north to south, as in the PCA plots
   mutate(Site = fct_reorder(Site, -Latitude),
@@ -163,7 +163,7 @@ q_all <- map_dfr(1:5, read_q) %>%
 # check every individual matched the metadata: this should print 0
 sum(is.na(q_all$Site))
 
-admix_plot <- ggplot(q_all, aes(ID, Ancestry, fill = Cluster)) +
+admix_plot_0.5 <- ggplot(q_all, aes(ID, Ancestry, fill = Cluster)) +
   geom_col(width = 1) +
   facet_grid(K ~ Site, scales = "free_x", space = "free_x") +
   scale_y_continuous(expand = c(0, 0), breaks = c(0, 0.5, 1)) +
@@ -175,8 +175,8 @@ admix_plot <- ggplot(q_all, aes(ID, Ancestry, fill = Cluster)) +
         panel.spacing.y = unit(0.8, "lines"),      # gap between values of K
         strip.text.x    = element_text(angle = 90, hjust = 0),
         legend.position = "none")
-admix_plot
+admix_plot_0.5
 OUTDIR="~/eco_genomics_2026/population_genomics/myresults/Population_Structure"
 
-ggsave(admix_plot, file = paste0(OUTDIR, "/admixture_K1-5.png"), width = 12, height = 7)
+ggsave(admix_plot_0.5, file = paste0(OUTDIR, "/admixture_K1-4_0.5.png"), width = 12, height = 7)
 

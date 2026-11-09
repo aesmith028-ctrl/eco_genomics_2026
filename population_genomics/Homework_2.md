@@ -183,3 +183,5 @@ done
 ```
 
 **Figure 5:** Admixture plot
+
+![](myresults/Population_Structure/admixture_K1-4_0.5.png)
